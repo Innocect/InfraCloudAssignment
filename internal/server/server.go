@@ -22,11 +22,13 @@ func RunServer() (err error) {
 		RoutePrefix: "127.0.0.1:8000",
 	}
 
-	//InitMongoDao
-	dao.InitShortlinkMongoDAO(routerConfig)
+	//InitRedisDao
+	redisConfig := &config.RedisConfig{
+		Redis: dao.InitShortlinkRedisDAO(),
+	}
 
 	// InitServices
-	services.InitShortenURLService(routerConfig)
+	services.InitShortenURLService(redisConfig)
 
 	// InitRoutes
 	server := &Server{
