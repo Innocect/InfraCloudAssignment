@@ -15,25 +15,30 @@ func ShortenURLHandler(service services.ShortenURLService) http.HandlerFunc {
 		req := &models.ShortLinkRedisData{}
 
 		if marshErr := utils.UnmarshalRequest(ctx, r, req); marshErr != nil {
+			w.WriteHeader(500)
 			w.Write([]byte(marshErr.Error()))
+			return
 		}
 
 		err := service.ValidateRequest(ctx, req)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
+			return
 		}
 
 		shortURL, err := service.ProcessRequest(ctx, req)
 		if err != nil {
 			w.WriteHeader(404)
 			w.Write([]byte(err.Error()))
+			return
 		}
 
 		response, err := utils.MarshalRequest(ctx, shortURL)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
+			return
 		}
 
 		w.WriteHeader(200)

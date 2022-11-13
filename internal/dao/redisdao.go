@@ -49,6 +49,7 @@ func GetShortURL(ctx context.Context, longURL string) (string, error) {
 	unmarshalledRedisData, err := client.Get(longURL).Bytes()
 	if err != nil {
 		fmt.Print("RedisDao Error : Unable to retrieve data from Redis")
+		return "", err
 	}
 
 	err = json.Unmarshal(unmarshalledRedisData, redisData)
@@ -57,5 +58,8 @@ func GetShortURL(ctx context.Context, longURL string) (string, error) {
 		return "", err
 	}
 
-	return redisData.ShortURL, nil
+	if redisData != nil {
+		return redisData.ShortURL, nil
+	}
+	return "", nil
 }

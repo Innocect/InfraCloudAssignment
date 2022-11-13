@@ -4,11 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"shortlink/internal/config"
 	"shortlink/internal/dao"
 	"shortlink/internal/models"
 	"shortlink/internal/utils"
 	"sync"
+	"time"
+
+	"github.com/go-redis/redis"
 )
 
 var shortenURLSvcStruct ShortenURLService
@@ -60,7 +64,7 @@ func (service *shortenURLService) ProcessRequest(ctx context.Context, req *model
 
 	longURL := req.LongURL
 	shortURL, err := dao.GetShortURL(ctx, longURL)
-	if err != nil {
+	if err != nil && err != redis.Nil {
 		return nil, err
 	}
 
@@ -73,7 +77,7 @@ func (service *shortenURLService) ProcessRequest(ctx context.Context, req *model
 	}
 
 	// If shortURL does not exist generate and persist in DB
-	shortURL, err = service.generateShortURL(longURL)
+	shortURL, err = service.generateShortURL(ctx, longURL)
 	if err != nil {
 		fmt.Print("Service Error : failed to generate short-url")
 		return nil, err
@@ -94,6 +98,42 @@ func (service *shortenURLService) ProcessRequest(ctx context.Context, req *model
 	}, nil
 }
 
-func (service *shortenURLService) generateShortURL(longURL string) (string, error) {
-	return "done", nil
+func (service *shortenURLService) generateShortURL(ctx context.Context, longURL string) (string, error) {
+
+	baseURL := "https://innocect/"
+	shortSuffix := ""
+	shortSuffixLength := 4
+
+	for {
+		shortSuffix = service.generate(shortSuffixLength)
+		if Suffixexists, _ := dao.GetShortURL(ctx, longURL); len(Suffixexists) == 0 {
+			break
+		}
+		shortSuffixLength = shortSuffixLength + 1
+		if shortSuffixLength == 9 {
+			fmt.Print("Service Error : Max number of retries atttempted. Try again")
+			return "", errors.New("Service Error : Max number of retries atttempted. Try again")
+		}
+	}
+
+	return baseURL + shortSuffix, nil
+}
+
+func (service *shortenURLService) generate(shortSuffixLength int) string {
+	var characters = []rune("23456789abcdefghjkmnpqrtuvwxyzACDEFGHJKMNPQRTUVWXYZ")
+
+	// Randomly shuffling characters
+	rand.Shuffle(len(characters), func(i, j int) {
+		characters[i], characters[j] = characters[j], characters[i]
+	})
+
+	shortSuffix := make([]rune, shortSuffixLength)
+	newRandomSource := rand.NewSource(time.Now().UnixNano())
+	randomNumberBasedOnSource := rand.New(newRandomSource)
+
+	for i := range shortSuffix {
+		shortSuffix[i] = characters[randomNumberBasedOnSource.Intn(len(characters))]
+	}
+
+	return string(shortSuffix)
 }
