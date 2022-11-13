@@ -3,16 +3,12 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	api "shortlink/internal/api/router"
 	"shortlink/internal/config"
+	"shortlink/internal/dao"
+	"shortlink/internal/services"
 
-	"github.com/golang/glog"
 	"github.com/rs/cors"
-)
-
-const (
-	dependencyURL = "https://github.com/innocect/software/shortlink/"
 )
 
 // Server ...
@@ -22,28 +18,26 @@ type Server struct {
 
 func RunServer() (err error) {
 
-	baseURL, err := url.Parse(dependencyURL)
-	if err != nil {
-		glog.Error("ServerError" + err.Error())
-		return err
+	routerConfig := &config.RouterConfig{
+		RoutePrefix: "127.0.0.1:8000",
 	}
 
-	routerConfig := config.RouterConfig{
-		DependencyURL: *baseURL,
-	}
+	//InitMongoDao
+	dao.InitShortlinkMongoDAO(routerConfig)
 
 	// InitServices
+	services.InitShortenURLService(routerConfig)
 
 	// InitRoutes
 	server := &Server{
 		Router: api.NewRouter(),
 	}
-	server.Router.InitializeRouter(&routerConfig)
+	server.Router.InitializeRouter(routerConfig)
 
-	return startServer(server)
+	return startServer(server, routerConfig)
 }
 
-func startServer(server *Server) error {
+func startServer(server *Server, config *config.RouterConfig) error {
 	fmt.Print("Starting Https Server on Port :50051")
 
 	corsOpt := cors.New(cors.Options{
@@ -51,5 +45,5 @@ func startServer(server *Server) error {
 		AllowedMethods: []string{http.MethodPost, http.MethodGet},
 	})
 
-	return http.ListenAndServe("127.0.0.1:8000", corsOpt.Handler(server.Router))
+	return http.ListenAndServe(config.RoutePrefix, corsOpt.Handler(server.Router))
 }
