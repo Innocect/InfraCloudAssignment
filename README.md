@@ -12,7 +12,7 @@ The router we are using is the [Gorilla Mux](https://github.com/gorilla/mux) rou
     1. Make sure you have the RedisDB installed. For installation run the docker-compose file present.
         i. `docker-compose -f docker-compose.yml up` 
 
-    2. Then cd to cmd/ and type the command go run main.go
+    2. If fails to run on Docker then cd to cmd/ and type the command go run main.go
 
     3. To call the service for generating short-urls, hit the endpoint with POST method given below and pass the body as provided.
         i. `http://localhost:8000/shorten-url`
