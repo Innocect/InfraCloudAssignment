@@ -1,0 +1,27 @@
+version: '3'
+services:
+  app:
+    container_name: short-link
+    image: short-link
+    build: 
+      context: .
+      target: Assignment
+    volumes:
+      - .:/app
+    ports:
+      - '2802:2802'
+      
+  redis:
+    image: 'docker.io/bitnami/redis:6.0-debian-10'
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+
+volumes:
+  redis_data:
+    driver: local
