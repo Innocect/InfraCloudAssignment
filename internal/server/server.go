@@ -3,11 +3,13 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	api "shortlink/internal/api/router"
 	"shortlink/internal/config"
 	"shortlink/internal/dao"
 	"shortlink/internal/services"
 
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
@@ -18,8 +20,14 @@ type Server struct {
 
 func RunServer() (err error) {
 
+	err = godotenv.Load("../../.env")
+	if err != nil {
+		return err
+	}
+
 	routerConfig := &config.RouterConfig{
 		RoutePrefix: "127.0.0.1:8000",
+		Port:        os.Getenv("PORT"),
 	}
 
 	//InitRedisDao

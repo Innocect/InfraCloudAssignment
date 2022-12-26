@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"shortlink/internal/config"
 	"shortlink/internal/dao"
 	"shortlink/internal/models"
@@ -100,7 +101,7 @@ func (service *shortenURLService) ProcessRequest(ctx context.Context, req *model
 
 func (service *shortenURLService) generateShortURL(ctx context.Context, longURL string) (string, error) {
 
-	baseURL := "https://innocect/"
+	baseURL := fmt.Sprintf("https://%s/", os.Getenv("SHORT_LINK_NAME"))
 	shortSuffix := ""
 	shortSuffixLength := 4
 
